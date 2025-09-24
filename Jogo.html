@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Desafio Google</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-top: 20px;
+      font-size: 3em;
+      color: #00c6ff;
+      text-shadow: 0 0 10px #00c6ff;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { text-shadow: 0 0 5px #00c6ff; }
+      50% { text-shadow: 0 0 20px #00c6ff; }
+      100% { text-shadow: 0 0 5px #00c6ff; }
+    }
+
+    .question-box {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid #444;
+      border-radius: 16px;
+      padding: 40px;
+      margin: 30px 0;
+      width: 100%;
+      max-width: 1200px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(0,0,0,0.6);
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    .question-box h3 {
+      font-size: 1.8em;
+      margin-bottom: 30px;
+    }
+
+    button {
+      background: linear-gradient(90deg, #00c6ff, #0072ff);
+      border: none;
+      border-radius: 10px;
+      padding: 16px 28px;
+      margin: 12px;
+      font-size: 1.2em;
+      color: white;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.3s;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 10px #00c6ff;
+    }
+
+    button:active {
+      transform: scale(0.95);
+    }
+
+    #feedback {
+      font-size: 1.5em;
+      margin-top: 30px;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    #chart-container {
+      width: 100%;
+      max-width: 1000px;
+      margin-top: 50px;
+    }
+
+    canvas {
+      background: #fff;
+      border-radius: 12px;
+      padding: 30px;
+      width: 1000px;
+      height: 500px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <h1>🎮 Desafio Google</h1>
+  <div id="game"></div>
+  <div id="feedback"></div>
+  <div id="chart-container" style="display:none;">
+    <canvas id="scoreChart"></canvas>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const questions = [
+      { text: "Em que ano o Google foi fundado?", answer: "1998", options: ["1995", "1998", "2001", "2004"] },
+      { text: "Quem são os fundadores do Google?", answer: "Larry Page e Sergey Brin", options: ["Elon Musk e Steve Jobs", "Larry Page e Sergey Brin", "Bill Gates e Paul Allen", "Sundar Pichai e Tim Cook"] },
+      { text: "Qual foi o primeiro nome do Google?", answer: "BackRub", options: ["BackRub", "WebCrawler", "Searchly", "Googol"] },
+      { text: "Qual produto do Google é usado para navegar na internet?", answer: "Chrome", options: ["Gmail", "Chrome", "Drive", "Maps"] },
+      { text: "Qual desses é um sistema operacional do Google?", answer: "Android", options: ["iOS", "Windows", "Android", "Linux"] },
+      { text: "Qual serviço do Google permite armazenar arquivos na nuvem?", answer: "Drive", options: ["YouTube", "Drive", "Meet", "Docs"] },
+      { text: "Qual é a missão do Google?", answer: "Organizar as informações", options: ["Conectar pessoas", "Organizar as informações", "Tornar a informação acessivel", "Tornar o conhecimento prático"] },
+      { text: "O famoso jogo do dinossauro aparece quando:", answer: "Está sem internet no Chrome", options: ["Você digita 'dino' no Google", "Está sem internet no Chrome", "Abre o Google Maps", "Usa o modo escuro"] },
+      { text: "Qual é a visão do Google?", answer: "Criar um futuro mais inteligente", options: ["Aplicativos secretos", "Jogos escondidos", "Criar um futuro mais inteligente", "Vídeos promocionais"] },
+      { text: "Qual aplicativo do Google é usado para vídeos?", answer: "YouTube", options: ["Drive", "Meet", "YouTube", "Docs"] }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+
+    function showQuestion() {
+      if (currentQuestion >= questions.length) {
+        showChart();
+        return;
+      }
+
+      const q = questions[currentQuestion];
+      let html = `<div class="question-box"><h3>${q.text}</h3>`;
+      q.options.forEach(opt => {
+        html += `<button onclick="checkAnswer('${opt}')">${opt}</button>`;
+      });
+      html += `</div>`;
+      document.getElementById("game").innerHTML = html;
+      document.getElementById("feedback").innerHTML = "";
+    }
+
+    function checkAnswer(selected) {
+      const q = questions[currentQuestion];
+      const isCorrect = selected === q.answer;
+      if (isCorrect) score++;
+      const feedback = isCorrect
+        ? `✅ Você acertou!`
+        : `❌ Você errou! Resposta correta: ${q.answer}`;
+      document.getElementById("feedback").innerHTML = `<div>${feedback}</div>`;
+      currentQuestion++;
+      setTimeout(showQuestion, 1500);
+    }
+
+    function showChart() {
+      document.getElementById("game").innerHTML = "";
+      document.getElementById("feedback").innerHTML = "<h2>🏆 Resultado Final</h2>";
+      document.getElementById("chart-container").style.display = "block";
+
+      const ctx = document.getElementById("scoreChart").getContext("2d");
+      new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: ["Acertos", "Erros"],
+          datasets: [{
+            label: "Desempenho",
+            data: [score, questions.length - score],
+            backgroundColor: ["#00c6ff", "#ff4d4d"]
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: questions.length,
+              ticks: {
+                font: {
+                  size: 18
+                }
+              }
+            },
+            x: {
+              ticks: {
+                font: {
+                  size: 18
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    showQuestion();
+  </script>
+</body>
+</html>
